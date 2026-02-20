@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AkiraTek — Smart Home Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --amber:     #FFB300;
+    --amber-dim: #CC8E00;
+    --amber-glow:#FFB30033;
+    --bg:        #080808;
+    --surface:   #111111;
+    --surface2:  #181818;
+    --border:    #222222;
+    --text:      #F5F5F5;
+    --muted:     #666666;
+    --white:     #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-decoration: none;
+  }
+  .nav-logo .a { color: var(--amber); }
+  .nav-logo .t { color: var(--white); }
+
+  .nav-lang { display: flex; gap: 4px; }
+
+  .lang-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .lang-btn:hover, .lang-btn.active {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: var(--amber-glow);
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -60%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(255,179,0,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero-tag .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px var(--amber);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; } 50% { opacity:0.3; }
+  }
+
+  .hero-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(64px, 12vw, 120px);
+    font-weight: 800;
+    letter-spacing: 6px;
+    line-height: 1;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero-logo .a { color: var(--amber); }
+  .hero-logo .t { color: var(--white); }
+
+  .hero-sub {
+    font-size: clamp(14px, 2vw, 17px);
+    color: var(--muted);
+    max-width: 460px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .hero-cta:hover { background: #FFC933; transform: translateY(-2px); }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 32px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--amber), transparent);
+    animation: scrollAnim 1.5s infinite;
+  }
+
+  @keyframes scrollAnim {
+    0%   { transform: scaleY(0); transform-origin: top; }
+    50%  { transform: scaleY(1); transform-origin: top; }
+    51%  { transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* SECTION */
+  .section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 24px 120px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 48px;
+  }
+  .section-title span { color: var(--amber); }
+
+  /* GRID */
+  .devices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .device-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.25s, box-shadow 0.25s;
+  }
+
+  .device-card.visible { opacity: 1; transform: translateY(0); }
+
+  .device-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--amber), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .device-card:hover {
+    border-color: #2e2e2e;
+    box-shadow: 0 8px 40px rgba(255,179,0,0.05);
+    transform: translateY(-4px) !important;
+  }
+
+  .device-card:hover::before { opacity: 1; }
+
+  .device-icon {
+    width: 48px; height: 48px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .device-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .device-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .device-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+
+  .tag {
+    font-size: 10px;
+    color: var(--amber);
+    background: rgba(255,179,0,0.08);
+    border: 1px solid rgba(255,179,0,0.18);
+    border-radius: 4px;
+    padding: 3px 8px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .device-actions { display: flex; gap: 8px; }
+
+  .btn-flash {
+    flex: 1;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-flash:hover { background: #FFC933; }
+  .btn-flash:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-icon {
+    width: 38px; height: 38px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    color: var(--muted);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-icon:hover { border-color: var(--amber); color: var(--amber); }
+
+  .badge-soon {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 9px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+  .footer-logo .a { color: var(--amber); }
+  .footer-logo .t { color: var(--white); }
+  .footer-copy { font-size: 12px; color: var(--muted); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid #2a2a2a;
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 420px;
+    transform: translateY(20px);
+    transition: transform 0.25s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .modal-close:hover { color: var(--white); border-color: #444; }
+
+  .modal-info {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    padding: 14px;
+    background: var(--surface2);
+    border-radius: 10px;
+    border-left: 2px solid var(--amber);
+  }
+
+  .modal-btn {
+    width: 100%;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background 0.2s;
+  }
+  .modal-btn:hover { background: #FFC933; }
+
+  .modal-btn-outline {
+    width: 100%;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .modal-btn-outline:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* BOARD SELECTION */
+  .step { display: none; }
+  .step.active { display: block; }
+
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .step-dot {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+
+  .step-dot.active {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #000;
+  }
+
+  .step-dot.done {
+    background: rgba(255,179,0,0.15);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .step-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .boards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .board-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .board-card:hover {
+    border-color: #444;
+  }
+
+  .board-card.selected {
+    border-color: var(--amber);
+    background: rgba(255,179,0,0.06);
+  }
+
+  .board-chip {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .board-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 2px;
+  }
+
+  .board-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .selected-board-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,179,0,0.2);
+  }
+
+  .selected-board-info .board-chip { margin-bottom: 0; font-size: 20px; }
+
+  .selected-board-info .info-text { font-size: 12px; color: var(--muted); }
+  .selected-board-info .info-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(16px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .section { padding: 60px 16px 80px; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo"><span class="a">Akira</span><span class="t">Tek</span></a>
+  <div class="nav-lang">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('ru')">RU</button>
+    <button class="lang-btn" onclick="setLang('az')">AZ</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag"><div class="dot"></div><span id="i-hero_tag"></span></div>
+  <div class="hero-logo"><span class="a">Akira</span><span class="t">Tek</span></div>
+  <p class="hero-sub" id="i-hero_sub"></p>
+  <a href="#devices" class="hero-cta">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="i-hero_cta"></span>
+  </a>
+  <div class="scroll-hint"><div class="scroll-line"></div></div>
+</section>
+
+<section class="section" id="devices">
+  <p class="section-label" id="i-devices_label"></p>
+  <h2 class="section-title" id="i-devices_title"></h2>
+  <div class="devices-grid" id="devicesGrid"></div>
+</section>
+
+<footer>
+  <div class="footer-logo"><span class="a">Akira</span><span class="t">Tek</span></div>
+  <div class="footer-copy" id="i-footer_copy"></div>
+</footer>
+
+<div class="modal-overlay" id="flashModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Flash Firmware</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-line"></div>
+      <div class="step-dot" id="dot2">2</div>
+    </div>
+
+    <!-- Step 1: Board Selection -->
+    <div class="step active" id="step1">
+      <div class="modal-info" id="i-modal_board_hint"></div>
+      <div class="boards-grid" id="boardsGrid"></div>
+      <button class="modal-btn" id="btnNext" onclick="goStep2()" disabled style="opacity:0.4"></button>
+      <button class="modal-btn-outline" onclick="closeModal()" id="i-modal_cancel"></button>
+    </div>
+
+    <!-- Step 2: Flash -->
+    <div class="step" id="step2">
+      <div class="selected-board-info" id="selectedBoardInfo"></div>
+      <div class="modal-info" id="i-modal_info"></div>
+      <button class="modal-btn" onclick="startFlash()" id="i-modal_flash"></button>
+      <button class="modal-btn-outline" onclick="goStep1()" id="i-modal_back"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const i18n = {
+  en: {
+    hero_tag:         "Smart Home Platform",
+    hero_sub:         "Open-source IoT devices for your home. Flash firmware, download the app, and connect in minutes.",
+    hero_cta:         "Explore Devices",
+    devices_label:    "Our Devices",
+    devices_title:    "Choose your <span>device</span>",
+    footer_copy:      "© 2026 AkiraTek. Open source IoT platform.",
+    modal_board_hint: "Select the board your device is built on.",
+    modal_info:       "Connect your device via USB, then click Flash. Your browser will ask you to select the serial port.",
+    modal_flash:      "⚡ Start Flashing",
+    modal_cancel:     "Cancel",
+    modal_back:       "← Back",
+    modal_next:       "Next →",
+    btn_flash:        "Flash",
+    soon:             "Coming Soon",
+  },
+  ru: {
+    hero_tag:         "Платформа умного дома",
+    hero_sub:         "Открытые IoT устройства для вашего дома. Прошейте устройство, скачайте приложение и подключитесь за минуты.",
+    hero_cta:         "Устройства",
+    devices_label:    "Наши устройства",
+    devices_title:    "Выберите <span>устройство</span>",
+    footer_copy:      "© 2026 AkiraTek. Открытая IoT платформа.",
+    modal_board_hint: "Выберите плату, на которой собрано ваше устройство.",
+    modal_info:       "Подключите устройство по USB, затем нажмите «Прошить». Браузер попросит выбрать серийный порт.",
+    modal_flash:      "⚡ Прошить",
+    modal_cancel:     "Отмена",
+    modal_back:       "← Назад",
+    modal_next:       "Далее →",
+    btn_flash:        "Прошить",
+    soon:             "Скоро",
+  },
+  az: {
+    hero_tag:         "Ağıllı Ev Platformu",
+    hero_sub:         "Eviniz üçün açıq mənbəli IoT cihazları. Proqram yazın, tətbiqi yükləyin və dəqiqələr ərzində qoşulun.",
+    hero_cta:         "Cihazları Kəşf Et",
+    devices_label:    "Cihazlarımız",
+    devices_title:    "Öz <span>cihazınızı</span> seçin",
+    footer_copy:      "© 2026 AkiraTek. Açıq mənbəli IoT platforması.",
+    modal_board_hint: "Cihazınızın qurulduğu platanı seçin.",
+    modal_info:       "Cihazınızı USB ilə qoşun, sonra Flash düyməsinə basın. Brauzer sizdən serial port seçməyi xahiş edəcək.",
+    modal_flash:      "⚡ Yaz",
+    modal_cancel:     "Ləğv et",
+    modal_back:       "← Geri",
+    modal_next:       "İrəli →",
+    btn_flash:        "Yaz",
+    soon:             "Tezliklə",
+  }
+};
+
+const boards = [
+  { id: 'nodemcu',   chip: '🔵', name: 'NodeMCU',      sub: 'ESP8266' },
+  { id: 'd1mini',    chip: '🔵', name: 'Wemos D1 Mini', sub: 'ESP8266' },
+  { id: 'esp32dev',  chip: '🟠', name: 'DevKit',        sub: 'ESP32' },
+  { id: 'esp32c3',   chip: '🟢', name: 'C3 SuperMini',  sub: 'ESP32-C3' },
+];
+
+const devices = [
+  {
+    id: 'dimmer', icon: '💡',
+    name: { en:'Dimmer', ru:'Диммер', az:'Dimmer' },
+    desc: {
+      en: 'Smart dimmer for controlling light brightness with smooth transitions and scene presets.',
+      ru: 'Умный диммер для управления яркостью освещения с плавными переходами и пресетами сцен.',
+      az: 'Hamar keçidlər və səhnə presetləri ilə işıq parlaqlığını idarə etmək üçün ağıllı dimmer.',
+    },
+    tags: ['ESP8266','WiFi','Flutter'], ready: true,
+  },
+  {
+    id: 'relay', icon: '🔌',
+    name: { en:'Relay Controller', ru:'Реле контроллер', az:'Relay Kontroler' },
+    desc: {
+      en: '4-channel relay controller for switching appliances with full WebSocket synchronization.',
+      ru: '4-канальный контроллер реле с полной синхронизацией через WebSocket.',
+      az: '4 kanallı relay kontroler WebSocket sinxronizasiyası ilə.',
+    },
+    tags: ['ESP32','WiFi','Flutter'], ready: true,
+  },
+  {
+    id: 'ledstrip', icon: '🌈',
+    name: { en:'LED Strip', ru:'LED Лента', az:'LED Lent' },
+    desc: {
+      en: 'WS2812 addressable LED strip controller with effects, scenes and music sync.',
+      ru: 'Контроллер адресной LED ленты WS2812 с эффектами, сценами и синхронизацией с музыкой.',
+      az: 'Effektlər, səhnələr və musiqi sinxronizasiyası ilə WS2812 LED lent kontroleri.',
+    },
+    tags: ['ESP32','WS2812','Flutter'], ready: true,
+  },
+  {
+    id: 'gate', icon: '🚗',
+    name: { en:'Parking Gate', ru:'Ворота парковки', az:'Parklanma Qapısı' },
+    desc: {
+      en: 'Smart parking gate controller with MQTT, remote access and activity log.',
+      ru: 'Умный контроллер ворот парковки с MQTT, удалённым доступом и журналом активности.',
+      az: 'MQTT, uzaqdan giriş və fəaliyyət jurnalı ilə ağıllı parklama qapısı kontroleri.',
+    },
+    tags: ['ESP32','MQTT','Flutter'], ready: false,
+  },
+];
+
+let lang = 'en';
+let activeDevice = null;
+let selectedBoard = null;
+
+function t(k) { return (i18n[lang] && i18n[lang][k]) || i18n.en[k] || k; }
+
+function applyTranslations() {
+  document.querySelectorAll('[id^="i-"]').forEach(el => {
+    const key = el.id.slice(2);
+    el.innerHTML = t(key);
+  });
+  // Update btnNext label separately (no id prefix trick since it's also disabled-toggled)
+  document.getElementById('btnNext').textContent = t('modal_next');
+}
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === l.toUpperCase());
+  });
+  applyTranslations();
+  renderDevices();
+}
+
+// ── IntersectionObserver ──────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+
+// ── Render Device Cards ───────────────────────────────────
+function renderDevices() {
+  const grid = document.getElementById('devicesGrid');
+  grid.innerHTML = '';
+  devices.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'device-card';
+    card.style.transitionDelay = `${i * 80}ms`;
+    card.innerHTML = `
+      ${!d.ready ? `<div class="badge-soon">${t('soon')}</div>` : ''}
+      <div class="device-icon">${d.icon}</div>
+      <div class="device-name">${d.name[lang]}</div>
+      <div class="device-desc">${d.desc[lang]}</div>
+      <div class="device-tags">${d.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
+      <div class="device-actions">
+        <button class="btn-flash" onclick="openModal('${d.id}','${d.name[lang]}')" ${!d.ready ? 'disabled' : ''}>
+          ⚡ ${t('btn_flash')}
+        </button>
+        <span class="btn-icon" title="APK">📱</span>
+        <span class="btn-icon" title="Docs">📄</span>
+      </div>
+    `;
+    grid.appendChild(card);
+    setTimeout(() => observer.observe(card), 50);
+  });
+}
+
+// ── Render Board Cards ────────────────────────────────────
+function renderBoards() {
+  const grid = document.getElementById('boardsGrid');
+  grid.innerHTML = '';
+  boards.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'board-card' + (selectedBoard === b.id ? ' selected' : '');
+    card.innerHTML = `
+      <div class="board-chip">${b.chip}</div>
+      <div class="board-name">${b.name}</div>
+      <div class="board-sub">${b.sub}</div>
+    `;
+    card.onclick = () => selectBoard(b.id);
+    grid.appendChild(card);
+  });
+}
+
+function selectBoard(id) {
+  selectedBoard = id;
+  renderBoards();
+  const btn = document.getElementById('btnNext');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+// ── Modal Steps ───────────────────────────────────────────
+function openModal(id, name) {
+  activeDevice = id;
+  selectedBoard = null;
+  document.getElementById('modalTitle').textContent = `Flash — ${name}`;
+  goStep1();
+  renderBoards();
+  document.getElementById('flashModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('flashModal').classList.remove('open');
+  activeDevice = null;
+  selectedBoard = null;
+}
+
+function goStep1() {
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('dot1').className = 'step-dot active';
+  document.getElementById('dot2').className = 'step-dot';
+  // Reset next button
+  const btn = document.getElementById('btnNext');
+  if (!selectedBoard) { btn.disabled = true; btn.style.opacity = '0.4'; }
+  renderBoards();
+}
+
+function goStep2() {
+  if (!selectedBoard) return;
+  const board = boards.find(b => b.id === selectedBoard);
+  document.getElementById('step1').classList.remove('active');
+  document.getElementById('step2').classList.add('active');
+  document.getElementById('dot1').className = 'step-dot done';
+  document.getElementById('dot2').className = 'step-dot active';
+  document.getElementById('selectedBoardInfo').innerHTML = `
+    <div class="board-chip">${board.chip}</div>
+    <div>
+      <div class="info-name">${board.name}</div>
+      <div class="info-text">${board.sub}</div>
+    </div>
+  `;
+  applyTranslations();
+}
+
+async function startFlash() {
+  if (!('serial' in navigator)) {
+    alert('Web Serial is not supported. Please use Chrome or Edge.');
+    return;
+  }
+  alert(`Flashing ${activeDevice} for ${selectedBoard} — coming soon!`);
+}
+
+document.getElementById('flashModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+renderDevices();
+applyTranslations();
+</script>
+</body>
+</html>
